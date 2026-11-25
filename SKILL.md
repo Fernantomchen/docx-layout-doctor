@@ -77,13 +77,21 @@ The fixer only touches spacing/break tags in `word/document.xml`; text is untouc
 
 Trust only the page count from a real Word/WPS PDF export. A home-grown renderer uses different line-height math, ignores sectPr margins, and skips `w:drawing`; never use its page count to drive layout changes.
 
-### 4. 接入生成器 Integrate
+### 4. 接入生成器 Integrate（首选，已落地）
 
-根治优于事后修正——优先在生成阶段就复用 `references/drift_sources.md` 里的 `EXACT_LINE_MAP`，直接产出 exact 行距。
+根治优于事后修正。**首选在生成阶段直接产出 exact**，这样连 `fix` 都不用跑。
 
-Prevention beats repair: reuse `EXACT_LINE_MAP` from `references/drift_sources.md` at generation time and emit exact spacing directly.
+Prevention beats repair. The recommended path is to emit exact spacing at generation time, so even `fix` becomes unnecessary.
 
-需要事后门禁时，在生成器写盘后追加 / For a post-generation gate:
+本项目已改 `_quiz2docx.convert`：`exact_line` 默认 `True`，`_apply_exact_lines(doc, answer_line)` 支持答案页行距保护。`gen_standard.from_md` 透传 `exact_line` / `answer_line`。2026-11-25 回归验证：新生成器默认版与"旧版+事后fix"行距分布完全一致（336×90 / 360×7 / 396×6 / 456×1，全 exact）。
+
+- 历史脚本重跑即得到 exact 卷；要旧 auto 行为显式传 `exact_line=False`。
+- 答案区需收紧时传 `answer_line=312`（防 exact 转换把 312 重映射成 336 而溢出）。
+- 备份：`_quiz2docx_before_exact_hook.py` / `gen_standard_before_exact_hook.py`（保留可回退）。
+
+通用生成器（非本项目）接入方式：复用 `references/drift_sources.md` 里的 `EXACT_LINE_MAP`。
+
+需要事后门禁时（如无法改生成器），在写盘后追加 / For a post-generation gate when the generator can't be changed:
 
 ```python
 import subprocess, sys
