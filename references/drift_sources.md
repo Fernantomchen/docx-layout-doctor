@@ -32,6 +32,17 @@
 修复前：`lineRule="auto"` 102 处（360 × 83，312 × 19），`exact` 0 处。
 修复后：`auto` 0 处，文字内容逐字符相同（4896 → 4896）。
 
+## 1b. 前置 exact（生成阶段根治）/ exact at generation time
+
+事后 `fix` 能用，但**首选在生成器里直接产出 exact**，连 fix 都省掉。
+
+- `_quiz2docx.convert`：`exact_line` 默认 `True`（2026-11-25 起）；`_apply_exact_lines(doc, answer_line)` 支持答案页行距保护。
+- `gen_standard.from_md`：透传 `exact_line` / `answer_line`。
+- 答案区收紧传 `answer_line=312`——否则 exact 转换按字号把 312 重映射成 336，答案区溢出。
+- 历史脚本重跑即得 exact 卷；旧 auto 行为显式传 `exact_line=False`。
+- 回归验证：新生成器默认版 与 旧版+事后fix 的行距分布完全一致（336×90/360×7/396×6/456×1，全 exact）。
+- 回退备份：`_quiz2docx_before_exact_hook.py`、`gen_standard_before_exact_hook.py`。
+
 ## 2. 分页符：真分页 vs WPS 假分页 / Real vs fake breaks
 
 | 形态 XML | 性质 | 处理 |
